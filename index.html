@@ -993,6 +993,90 @@ function loadSupervisorReports() {
     renderSupervisorReports();
 }
 
+function renderSupervisorReports() {
+    const body=document.getElementById("supervisorBody");
+    const summary=document.getElementById("supervisorSummary");
+    if(!body || !summary) return;
+
+    const search=(document.getElementById("supSearch")?.value || "").trim().toLowerCase();
+    const date=(document.getElementById("supDate")?.value || "").trim().toLowerCase();
+
+    const filtered=supervisorReports.filter(item=>{
+        const r=item.report_data || {};
+        const hay=[
+            item.profiles?.user_code, r["EMD Number"], r["Sign In"],
+            r["Connected Ticket"], r["Issue Date"], r["FOP"]
+        ].map(v=>String(v ?? "").toLowerCase());
+        const matchesSearch=!search || hay.some(v=>v.includes(search));
+        const matchesDate=!date || String(r["Issue Date"] ?? "").toLowerCase().includes(date);
+        return matchesSearch && matchesDate;
+    });
+
+    const totalETB=filtered.reduce((sum,item)=>sum+(parseFloat(item.report_data?.["Cash Collected ETB"])||0),0);
+    const totalUSD=filtered.reduce((sum,item)=>sum+(parseFloat(item.report_data?.["Cash Collected USD"])||0),0);
+    const users=new Set(filtered.map(item=>item.profiles?.user_code).filter(Boolean));
+
+    summary.innerHTML=`
+      <div class="metric"><div class="label">Users</div><div class="value">${users.size}</div></div>
+      <div class="metric"><div class="label">Report Records</div><div class="value">${filtered.length}</div></div>
+      <div class="metric primary"><div class="label">Collected ETB</div><div class="value">ETB ${formatNumber(totalETB)}</div></div>
+      <div class="metric success"><div class="label">Collected USD</div><div class="value">USD ${formatNumber(totalUSD)}</div></div>`;
+
+    if(!filtered.length){
+        body.innerHTML='<tr><td colspan="11" style="text-align:center;padding:28px;color:#8094a8">No user reports found.</td></tr>';
+        return;
+    }
+
+    body.innerHTML=filtered.map(item=>{
+        const r=item.report_data || {};
+        return `<tr>
+          <td>${escapeHtml(r["Issue Date"]||"")}</td>
+          <td><strong>${escapeHtml(item.profiles?.user_code||"")}</strong></td>
+          <td>${escapeHtml(r["Sign In"]||"")}</td>
+          <td>${escapeHtml(r["Connected Ticket"]||"")}</td>
+          <td>${escapeHtml(r["EMD Number"]||"")}</td>
+          <td>${formatNumber(r["USD Rate"])}</td>
+          <td>${escapeHtml(r["FOP"]||"")}</td>
+          <td>${formatNumber(r["Baggage Qty"])}</td>
+          <td>${formatNumber(r["Rate per KG"])}</td>
+          <td>${formatNumber(r["Cash Collected ETB"])}</td>
+          <td>${formatNumber(r["Cash Collected USD"])}</td>
+        </tr>`;
+    }).join("");
+}
+
+function downloadSupervisorExcel(){
+    if(typeof XLSX === "undefined") return alert("Excel library is not available.");
+    const search=(document.getElementById("supSearch")?.value || "").trim().toLowerCase();
+    const date=(document.getElementById("supDate")?.value || "").trim().toLowerCase();
+    const filtered=supervisorReports.filter(item=>{
+        const r=item.report_data || {};
+        const hay=[item.profiles?.user_code,r["EMD Number"],r["Sign In"],r["Connected Ticket"],r["Issue Date"],r["FOP"]].map(v=>String(v??"").toLowerCase());
+        return (!search || hay.some(v=>v.includes(search))) && (!date || String(r["Issue Date"]??"").toLowerCase().includes(date));
+    });
+    const rows=filtered.map(item=>{
+        const r=item.report_data || {};
+        return {
+          "User ID":item.profiles?.user_code||"",
+          "Issue Date":r["Issue Date"]||"",
+          "Sign In":r["Sign In"]||"",
+          "Connected Ticket":r["Connected Ticket"]||"",
+          "EMD Number":r["EMD Number"]||"",
+          "USD Rate":r["USD Rate"]||"",
+          "Form of Payment":r["FOP"]||"",
+          "Weight in KG":r["Baggage Qty"]||"",
+          "Rate per KG (ETB)":r["Rate per KG"]||"",
+          "Amount (ETB)":r["Cash Collected ETB"]||"",
+          "Exchange Rate (USD Rate)":r["USD Rate"]||"",
+          "Amount in USD":r["Cash Collected USD"]||""
+        };
+    });
+    const ws=XLSX.utils.json_to_sheet(rows);
+    const wb=XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb,ws,"All User Reports");
+    XLSX.writeFile(wb,"Excess_Baggage_Collection_Supervisor_Report.xlsx");
+}
+
 const processedEMDs = new Set();
 
 /*
