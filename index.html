@@ -239,6 +239,7 @@ footer strong{color:#526b82}
 .auth-tabs{display:flex;gap:8px;margin-bottom:18px}.auth-tabs button{flex:1;padding:11px;border:1px solid var(--line);background:#f5f8fb;color:var(--navy);border-radius:10px;font-weight:700;cursor:pointer}.auth-tabs button.active{background:var(--navy);color:#fff}
 .auth-field{margin:12px 0}.auth-field label{display:block;font-weight:700;font-size:13px;margin-bottom:6px}.auth-field input{width:100%;padding:12px;border:1px solid #cbd9e5;border-radius:10px;font-size:15px}
 .auth-btn{width:100%;border:0;background:var(--blue);color:#fff;padding:13px;border-radius:10px;font-weight:800;cursor:pointer;margin-top:8px}.auth-btn:hover{background:var(--blue2)}
+.guest-btn{width:100%;border:1px solid var(--line);background:#fff;color:var(--navy);padding:12px;border-radius:10px;font-weight:800;cursor:pointer;margin-top:10px}.guest-btn:hover{background:#f5f8fb}.guest-divider{display:flex;align-items:center;gap:10px;margin:16px 0 4px;color:var(--muted);font-size:12px}.guest-divider:before,.guest-divider:after{content:"";height:1px;background:var(--line);flex:1}
 .auth-msg{min-height:22px;margin-top:12px;font-size:13px;text-align:center;font-weight:700}.auth-note{font-size:11px;color:var(--muted);margin-top:14px;text-align:center;line-height:1.5}
 #supervisorPanel{display:none;padding:24px}.supervisor-head{display:flex;justify-content:space-between;align-items:center;gap:15px;margin-bottom:18px}.supervisor-head h2{margin:0}.supervisor-tools{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:15px}.supervisor-tools input{padding:10px;border:1px solid var(--line);border-radius:9px}.supervisor-tools button{padding:10px 14px;border:0;border-radius:9px;background:var(--navy);color:#fff;font-weight:700;cursor:pointer}.supervisor-table{overflow:auto;background:#fff;border-radius:12px;border:1px solid var(--line)}.supervisor-table table{width:100%;border-collapse:collapse;min-width:900px}.supervisor-table th,.supervisor-table td{padding:10px;border-bottom:1px solid #e4edf4;text-align:left;font-size:12px}.supervisor-table th{background:#f1f6fa}.role-badge{display:inline-block;padding:4px 8px;border-radius:99px;background:#e8f6f0;color:#087b5b;font-size:11px;font-weight:800}.logout-btn{border:0;background:#d7193f;color:#fff;padding:8px 12px;border-radius:8px;cursor:pointer;font-weight:700}.cloud-status{font-size:11px;color:var(--muted);margin-left:8px}.hidden{display:none!important}
 @media(max-width:700px){.auth-card{padding:22px}.supervisor-head{align-items:flex-start;flex-direction:column}}
@@ -271,6 +272,8 @@ footer strong{color:#526b82}
       <input id="authPassword2" type="password" autocomplete="new-password" placeholder="Confirm password">
     </div>
     <button id="authAction" class="auth-btn" onclick="handleAuth()">Sign In</button>
+    <div class="guest-divider"><span>OR</span></div>
+    <button type="button" class="guest-btn" onclick="continueAsGuest()">Continue as Guest</button>
     <div id="authMsg" class="auth-msg"></div>
     
   </div>
@@ -494,6 +497,7 @@ let reportData = [];
 const USERS_KEY = "excess_baggage_users_v1";
 const REPORTS_KEY = "excess_baggage_reports_v1";
 const SESSION_KEY = "excess_baggage_session_v1";
+const GUEST_ID_KEY = "excess_baggage_guest_id_v1";
 
 let currentUser = null;
 let currentProfile = null;
@@ -563,6 +567,27 @@ async function ensureSupervisorAccount() {
     }
 }
 
+function getGuestId() {
+    let id=localStorage.getItem(GUEST_ID_KEY);
+    if(!id){
+        id="guest_"+Date.now().toString(36)+"_"+Math.random().toString(36).slice(2,8);
+        localStorage.setItem(GUEST_ID_KEY,id);
+    }
+    return id;
+}
+
+async function continueAsGuest() {
+    const guestId=getGuestId();
+    localStorage.setItem(SESSION_KEY,"__GUEST__");
+    currentUser={id:guestId,user_code:guestId};
+    currentProfile={id:guestId,user_code:"Guest",role:"guest"};
+    document.getElementById("authScreen").style.display="none";
+    document.getElementById("supervisorPanel").style.display="none";
+    document.getElementById("mainApp").style.display="flex";
+    document.querySelector(".user-pill strong")?.replaceChildren(document.createTextNode("Guest"));
+    loadMyReports();
+}
+
 async function handleAuth() {
     const userId=normalizeUserId(document.getElementById("authUserId").value);
     const password=document.getElementById("authPassword").value;
@@ -617,6 +642,10 @@ async function loadSession() {
     await ensureSupervisorAccount();
     const sessionId=localStorage.getItem(SESSION_KEY);
     if(!sessionId){ document.getElementById("authScreen").style.display="flex"; return; }
+    if(sessionId==="__GUEST__"){
+        await continueAsGuest();
+        return;
+    }
     const users=getUsers();
     const user=users[String(sessionId).toLowerCase()];
     if(user) await finishLogin(user);
@@ -667,6 +696,7 @@ function loadSupervisorReports() {
     const all=getAllLocalReports();
     supervisorReports=[];
     Object.keys(all).forEach(userCode=>{
+        if(String(userCode).startsWith("guest_")) return;
         (Array.isArray(all[userCode])?all[userCode]:[]).forEach(r=>{
             supervisorReports.push({report_data:r,profiles:{user_code:userCode},emd_number:r["EMD Number"],issue_date:r["Issue Date"],sign_in:r["Sign In"]});
         });
