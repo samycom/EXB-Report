@@ -245,7 +245,24 @@ footer strong{color:#526b82}
 .auth-btn{width:100%;border:0;background:var(--blue);color:#fff;padding:13px;border-radius:10px;font-weight:800;cursor:pointer;margin-top:8px}.auth-btn:hover{background:var(--blue2)}
 .guest-btn{width:100%;border:1px solid var(--line);background:#fff;color:var(--navy);padding:12px;border-radius:10px;font-weight:800;cursor:pointer;margin-top:10px}.guest-btn:hover{background:#f5f8fb}.guest-divider{display:flex;align-items:center;gap:10px;margin:16px 0 4px;color:var(--muted);font-size:12px}.guest-divider:before,.guest-divider:after{content:"";height:1px;background:var(--line);flex:1}
 .auth-msg{min-height:22px;margin-top:12px;font-size:13px;text-align:center;font-weight:700}.auth-note{font-size:11px;color:var(--muted);margin-top:14px;text-align:center;line-height:1.5}.forgot-btn{display:block;width:100%;border:0;background:transparent;color:var(--blue);font-weight:700;font-size:13px;cursor:pointer;margin-top:12px}.forgot-btn:hover{text-decoration:underline}.recovery-modal{position:fixed;inset:0;z-index:10001;background:rgba(16,42,67,.48);display:flex;align-items:center;justify-content:center;padding:20px}.recovery-card{width:min(460px,100%);background:#fff;border-radius:18px;box-shadow:0 20px 60px rgba(16,42,67,.25);padding:26px}.recovery-head{display:flex;align-items:center;justify-content:space-between;gap:12px}.recovery-head h2{margin:0;color:var(--navy);font-size:22px}.recovery-close{border:0;background:#f0f4f7;color:var(--navy);width:34px;height:34px;border-radius:50%;font-size:23px;cursor:pointer}.recovery-subtitle{color:var(--muted);font-size:13px;line-height:1.5;margin:8px 0 16px}.recovery-question-box{background:#f4f8fb;border:1px solid var(--line);border-radius:10px;padding:12px;margin:10px 0 14px}.recovery-question-box span{display:block;font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;margin-bottom:5px}.recovery-question-box strong{display:block;color:var(--navy);font-size:14px;line-height:1.4}.recovery-back{width:100%;border:1px solid var(--line);background:#fff;color:var(--navy);padding:11px;border-radius:10px;font-weight:800;cursor:pointer;margin-top:9px}
-#supervisorPanel{display:none;padding:24px}.supervisor-head{display:flex;justify-content:space-between;align-items:center;gap:15px;margin-bottom:18px}.supervisor-head h2{margin:0}.supervisor-tools{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:15px}.supervisor-tools input{padding:10px;border:1px solid var(--line);border-radius:9px}.supervisor-tools button{padding:10px 14px;border:0;border-radius:9px;background:var(--navy);color:#fff;font-weight:700;cursor:pointer}.supervisor-table{overflow:auto;background:#fff;border-radius:12px;border:1px solid var(--line)}.supervisor-table table{width:100%;border-collapse:collapse;min-width:900px}.supervisor-table th,.supervisor-table td{padding:10px;border-bottom:1px solid #e4edf4;text-align:left;font-size:12px}.supervisor-table th{background:#f1f6fa}.role-badge{display:inline-block;padding:4px 8px;border-radius:99px;background:#e8f6f0;color:#087b5b;font-size:11px;font-weight:800}.logout-btn{border:0;background:#d7193f;color:#fff;padding:8px 12px;border-radius:8px;cursor:pointer;font-weight:700}.cloud-status{font-size:11px;color:var(--muted);margin-left:8px}/* ===== Daily Reports History ===== */
+#supervisorPanel{display:none;padding:24px}.supervisor-head{display:flex;justify-content:space-between;align-items:center;gap:15px;margin-bottom:18px}.supervisor-head h2{margin:0}.supervisor-tools{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:15px}.supervisor-tools input{padding:10px;border:1px solid var(--line);border-radius:9px}.supervisor-tools button{padding:10px 14px;border:0;border-radius:9px;background:var(--navy);color:#fff;font-weight:700;cursor:pointer}.supervisor-table{overflow:auto;background:#fff;border-radius:12px;border:1px solid var(--line)}.supervisor-table table{width:100%;border-collapse:collapse;min-width:900px}.supervisor-table th,.supervisor-table td{padding:10px;border-bottom:1px solid #e4edf4;text-align:left;font-size:12px}.supervisor-table th{background:#f1f6fa}.role-badge{display:inline-block;padding:4px 8px;border-radius:99px;background:#e8f6f0;color:#087b5b;font-size:11px;font-weight:800}.logout-btn{border:0;background:#d7193f;color:#fff;padding:8px 12px;border-radius:8px;cursor:pointer;font-weight:700}.cloud-status{font-size:11px;color:var(--muted);margin-left:8px}
+.month-filter-wrap{position:relative}
+.month-filter-button{min-width:145px;display:inline-flex;align-items:center;justify-content:center;gap:7px}
+.month-picker{display:none;position:absolute;top:calc(100% + 7px);left:0;z-index:3000;width:305px;background:var(--card,#fff);border:1px solid var(--line);border-radius:12px;box-shadow:0 14px 35px rgba(16,42,67,.18);overflow:hidden}
+.month-picker.open{display:block}
+.month-picker-head{display:grid;grid-template-columns:42px 1fr 42px;align-items:center;padding:8px;border-bottom:1px solid var(--line);background:var(--card,#fff)}
+.month-picker-head button{border:0;background:transparent;color:var(--ink);font-size:30px;line-height:1;cursor:pointer;padding:3px 8px}
+.month-picker-head strong{text-align:center;font-size:18px;color:var(--ink)}
+.month-grid{display:grid;grid-template-columns:repeat(3,1fr)}
+.month-grid button{border:0;border-right:1px solid var(--line);border-bottom:1px solid var(--line);background:var(--card,#fff);color:var(--ink);padding:14px 6px;font-size:14px;cursor:pointer}
+.month-grid button:nth-child(3n){border-right:0}
+.month-grid button:hover{background:var(--bg,#eef4f8)}
+.month-grid button.selected{background:var(--blue,#0877d9);color:#fff;font-weight:800}
+.month-picker-footer{padding:8px;border-top:1px solid var(--line);text-align:center;background:var(--card,#fff)}
+.month-picker-footer button{border:0;background:transparent;color:var(--blue,#0877d9);font-weight:700;cursor:pointer;padding:5px 10px}
+@media(max-width:620px){.month-picker{position:fixed;left:50%;top:120px;transform:translateX(-50%);width:min(305px,calc(100vw - 28px))}}
+
+/* ===== Daily Reports History ===== */
 .reports-history{margin-top:18px;display:none}
 .reports-history.open{display:block}
 .history-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px}
@@ -463,6 +480,20 @@ body.dark-mode .dark-mode-btn:hover{background:#243b52}
   <div class="supervisor-tools">
     <input id="supSearch" placeholder="Search User ID, EMD, Sign In, ticket..." oninput="renderSupervisorReports()">
     <input id="supDate" type="text" placeholder="Issue date e.g. 17SEP26" oninput="renderSupervisorReports()">
+    <div class="month-filter-wrap">
+      <button type="button" id="supMonthButton" class="month-filter-button" onclick="toggleSupervisorMonthPicker()">📅 <span id="supMonthLabel">Select Month</span></button>
+      <div id="supMonthPicker" class="month-picker" aria-hidden="true">
+        <div class="month-picker-head">
+          <button type="button" onclick="changeSupervisorPickerYear(-1)" aria-label="Previous year">‹</button>
+          <strong id="supPickerYear">2026</strong>
+          <button type="button" onclick="changeSupervisorPickerYear(1)" aria-label="Next year">›</button>
+        </div>
+        <div class="month-grid" id="supMonthGrid"></div>
+        <div class="month-picker-footer">
+          <button type="button" onclick="clearSupervisorMonth()">Clear month</button>
+        </div>
+      </div>
+    </div>
     <button onclick="downloadSupervisorExcel()">Download Excel</button>
     <button onclick="loadSupervisorReports()">Refresh</button>
   </div>
@@ -979,6 +1010,90 @@ function logout() {
     showAuthMode("login");
 }
 
+const supervisorMonthNames = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+let supervisorSelectedMonth = null;
+let supervisorPickerYear = new Date().getFullYear();
+
+function getSupervisorIssueMonth(value){
+    const v=String(value||"").trim().toUpperCase();
+    if(!v) return null;
+    // Standard EMD date: 10SEP26
+    let m=v.match(/^(\d{1,2})(JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)(\d{2})$/);
+    if(m){
+        const months={JAN:0,FEB:1,MAR:2,APR:3,MAY:4,JUN:5,JUL:6,AUG:7,SEP:8,OCT:9,NOV:10,DEC:11};
+        let yy=parseInt(m[3],10);
+        const year=yy>=70 ? 1900+yy : 2000+yy;
+        return {year,month:months[m[2]]};
+    }
+    // Excel/ISO dates such as 2026-09-10 or 2026/09/10
+    const iso=v.match(/^(\d{4})[-\/]?(\d{2})[-\/]?(\d{2})/);
+    if(iso) return {year:parseInt(iso[1],10),month:parseInt(iso[2],10)-1};
+    const d=new Date(value);
+    if(!isNaN(d.getTime())) return {year:d.getFullYear(),month:d.getMonth()};
+    return null;
+}
+
+function renderSupervisorMonthPicker(){
+    const yearEl=document.getElementById("supPickerYear");
+    const grid=document.getElementById("supMonthGrid");
+    if(!yearEl || !grid) return;
+    yearEl.textContent=supervisorPickerYear;
+    grid.innerHTML=supervisorMonthNames.map((name,i)=>{
+        const selected=supervisorSelectedMonth && supervisorSelectedMonth.year===supervisorPickerYear && supervisorSelectedMonth.month===i;
+        return `<button type="button" class="${selected?'selected':''}" onclick="selectSupervisorMonth(${i})">${name}</button>`;
+    }).join("");
+}
+
+function toggleSupervisorMonthPicker(){
+    const picker=document.getElementById("supMonthPicker");
+    if(!picker) return;
+    const open=picker.classList.toggle("open");
+    picker.setAttribute("aria-hidden",open?"false":"true");
+    if(open){
+        if(supervisorSelectedMonth) supervisorPickerYear=supervisorSelectedMonth.year;
+        else {
+            const latest=supervisorReports[0]?.issue_date;
+            const parsed=getSupervisorIssueMonth(latest);
+            supervisorPickerYear=parsed?.year || new Date().getFullYear();
+        }
+        renderSupervisorMonthPicker();
+    }
+}
+
+function changeSupervisorPickerYear(delta){
+    supervisorPickerYear+=delta;
+    renderSupervisorMonthPicker();
+}
+
+function selectSupervisorMonth(monthIndex){
+    supervisorSelectedMonth={year:supervisorPickerYear,month:monthIndex};
+    const label=document.getElementById("supMonthLabel");
+    if(label) label.textContent=`${supervisorMonthNames[monthIndex]} ${supervisorPickerYear}`;
+    const picker=document.getElementById("supMonthPicker");
+    if(picker){picker.classList.remove("open");picker.setAttribute("aria-hidden","true");}
+    renderSupervisorMonthPicker();
+    renderSupervisorReports();
+}
+
+function clearSupervisorMonth(){
+    supervisorSelectedMonth=null;
+    const label=document.getElementById("supMonthLabel");
+    if(label) label.textContent="Select Month";
+    const picker=document.getElementById("supMonthPicker");
+    if(picker){picker.classList.remove("open");picker.setAttribute("aria-hidden","true");}
+    renderSupervisorMonthPicker();
+    renderSupervisorReports();
+}
+
+document.addEventListener("click",function(e){
+    const wrap=document.querySelector(".month-filter-wrap");
+    const picker=document.getElementById("supMonthPicker");
+    if(wrap && picker && !wrap.contains(e.target) && picker.classList.contains("open")){
+        picker.classList.remove("open");
+        picker.setAttribute("aria-hidden","true");
+    }
+});
+
 function loadSupervisorReports() {
     if(!currentProfile || currentProfile.role!=="supervisor") return;
     const all=getAllLocalReports();
@@ -1009,7 +1124,9 @@ function renderSupervisorReports() {
         ].map(v=>String(v ?? "").toLowerCase());
         const matchesSearch=!search || hay.some(v=>v.includes(search));
         const matchesDate=!date || String(r["Issue Date"] ?? "").toLowerCase().includes(date);
-        return matchesSearch && matchesDate;
+        const issueMonth=getSupervisorIssueMonth(r["Issue Date"]);
+        const matchesMonth=!supervisorSelectedMonth || (issueMonth && issueMonth.year===supervisorSelectedMonth.year && issueMonth.month===supervisorSelectedMonth.month);
+        return matchesSearch && matchesDate && matchesMonth;
     });
 
     const totalETB=filtered.reduce((sum,item)=>sum+(parseFloat(item.report_data?.["Cash Collected ETB"])||0),0);
@@ -1052,7 +1169,9 @@ function downloadSupervisorExcel(){
     const filtered=supervisorReports.filter(item=>{
         const r=item.report_data || {};
         const hay=[item.profiles?.user_code,r["EMD Number"],r["Sign In"],r["Connected Ticket"],r["Issue Date"],r["FOP"]].map(v=>String(v??"").toLowerCase());
-        return (!search || hay.some(v=>v.includes(search))) && (!date || String(r["Issue Date"]??"").toLowerCase().includes(date));
+        const issueMonth=getSupervisorIssueMonth(r["Issue Date"]);
+        const matchesMonth=!supervisorSelectedMonth || (issueMonth && issueMonth.year===supervisorSelectedMonth.year && issueMonth.month===supervisorSelectedMonth.month);
+        return (!search || hay.some(v=>v.includes(search))) && (!date || String(r["Issue Date"]??"").toLowerCase().includes(date)) && matchesMonth;
     });
     const rows=filtered.map(item=>{
         const r=item.report_data || {};
