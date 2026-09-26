@@ -236,7 +236,7 @@ footer strong{color:#526b82}
 #authScreen{position:fixed;inset:0;z-index:9999;background:linear-gradient(135deg,#eef5fa,#dcecf8);display:flex;align-items:center;justify-content:center;padding:20px}
 .auth-card{width:min(460px,100%);background:#fff;border-radius:22px;box-shadow:0 20px 60px rgba(16,42,67,.18);padding:30px}
 .auth-brand{text-align:center;margin-bottom:20px}.auth-brand h1{margin:0;color:var(--navy);font-size:25px}.auth-brand p{color:var(--muted);margin:8px 0 0}
-.auth-tabs{display:flex;gap:8px;margin-bottom:18px}.auth-tabs button{flex:1;padding:11px;border:1px solid var(--line);background:#f5f8fb;border-radius:10px;font-weight:700;cursor:pointer}.auth-tabs button.active{background:var(--navy);color:#fff}
+.auth-tabs{display:flex;gap:8px;margin-bottom:18px}.auth-tabs button{flex:1;padding:11px;border:1px solid var(--line);background:#f5f8fb;color:var(--navy);border-radius:10px;font-weight:700;cursor:pointer}.auth-tabs button.active{background:var(--navy);color:#fff}
 .auth-field{margin:12px 0}.auth-field label{display:block;font-weight:700;font-size:13px;margin-bottom:6px}.auth-field input{width:100%;padding:12px;border:1px solid #cbd9e5;border-radius:10px;font-size:15px}
 .auth-btn{width:100%;border:0;background:var(--blue);color:#fff;padding:13px;border-radius:10px;font-weight:800;cursor:pointer;margin-top:8px}.auth-btn:hover{background:var(--blue2)}
 .auth-msg{min-height:22px;margin-top:12px;font-size:13px;text-align:center;font-weight:700}.auth-note{font-size:11px;color:var(--muted);margin-top:14px;text-align:center;line-height:1.5}
@@ -252,11 +252,11 @@ footer strong{color:#526b82}
   <div class="auth-card">
     <div class="auth-brand">
       <h1>Excess Baggage Report</h1>
-      <p>Local browser reporting system</p>
+      
     </div>
     <div class="auth-tabs">
       <button id="loginTab" class="active" onclick="showAuthMode('login')">Sign In</button>
-      <button id="registerTab" onclick="showAuthMode('register')">Create Account</button>
+      <button id="registerTab" onclick="showAuthMode('register')">Sign Up / Register</button>
     </div>
     <div class="auth-field">
       <label for="authUserId">User ID</label>
@@ -272,7 +272,7 @@ footer strong{color:#526b82}
     </div>
     <button id="authAction" class="auth-btn" onclick="handleAuth()">Sign In</button>
     <div id="authMsg" class="auth-msg"></div>
-    <div class="auth-note">Your accounts and reports are stored in this browser using localStorage. Each normal user can access only their own reports. Default Supervisor: User ID 37888 / Password 37888@</div>
+    
   </div>
 </div>
 
@@ -545,8 +545,20 @@ async function hashPassword(password) {
 
 async function ensureSupervisorAccount() {
     const users=getUsers();
-    if(!users["37888"]) {
-        users["37888"]={user_code:"37888",passwordHash:await hashPassword("37888@"),role:"supervisor"};
+    const oldKey="37888";
+    const newKey="37111";
+    // Convert the previous default supervisor to the new default account.
+    if(users[oldKey] && users[oldKey].role==="supervisor" && !users[newKey]) {
+        users[newKey]={user_code:"37111",passwordHash:await hashPassword("37111@"),role:"supervisor"};
+        const all=getAllLocalReports();
+        if(all[oldKey] && !all[newKey]) all[newKey]=all[oldKey];
+        delete all[oldKey];
+        saveAllLocalReports(all);
+        delete users[oldKey];
+        saveUsers(users);
+    }
+    if(!users[newKey]) {
+        users[newKey]={user_code:"37111",passwordHash:await hashPassword("37111@"),role:"supervisor"};
         saveUsers(users);
     }
 }
