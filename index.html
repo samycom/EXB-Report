@@ -140,6 +140,7 @@ button{
 button:hover{transform:translateY(-1px);filter:brightness(1.04);box-shadow:0 6px 14px rgba(16,42,67,.12)}
 .generate{grid-column:1/-1;background:linear-gradient(135deg,#087bdc,#1472c5)}
 .excel{grid-column:1/-1;background:linear-gradient(135deg,#07946a,#07865f)}
+.excel-import{grid-column:1/-1;background:linear-gradient(135deg,#6b4fd3,#5540b5)}
 .clear-input{background:linear-gradient(135deg,#f59b0b,#e88300)}
 .clear-all{background:linear-gradient(135deg,#dc2145,#c91536)}
 .report-actions{display:flex;gap:10px;margin-top:12px;justify-content:flex-end;flex-wrap:wrap}
@@ -580,6 +581,8 @@ ISSUED IN CONNECTION WITH - 0712163315291
 
         <div class="action-grid">
           <button class="generate" onclick="generateReport()">⊕ &nbsp; Generate &amp; Add Report</button>
+          <button class="excel-import" type="button" onclick="document.getElementById('excelImportInput').click()">▤ &nbsp; Import Excel &amp; Generate Report</button>
+          <input id="excelImportInput" type="file" accept=".xlsx,.xls,.csv" style="display:none" onchange="importExcelReport(event)">
           <button class="clear-input" onclick="clearInput()">✎ &nbsp; Clear Input</button>
         </div>
       </section>
@@ -2345,6 +2348,191 @@ function downloadExcel() {
         "Excess_Baggage_USD_Report.xlsx"
     );
 
+}
+
+/*
+=========================================================
+IMPORT EXCEL / SPREADSHEET REPORT
+=========================================================
+
+Supported columns (the user's 3rd format):
+Issue Date | Sign In | Connected Ticket | EMD Number | USD Rate |
+Form of Payment | Weight in KG | Rate per KG (ETB) | Amount (ETB) |
+Exchange Rate (USD Rate) | Amount in USD
+
+Extra columns are ignored.
+*/
+
+function excelHeaderKey(value) {
+    return String(value || "")
+        .trim()
+        .toLowerCase()
+        .replace(/\s+/g, " ");
+}
+
+function excelNumber(value) {
+    if (value === null || value === undefined || value === "") return 0;
+    const cleaned = String(value).replace(/,/g, "").replace(/\s+/g, "").trim();
+    const n = parseFloat(cleaned);
+    return Number.isFinite(n) ? n : 0;
+}
+
+async function importExcelReport(event) {
+    const file = event?.target?.files?.[0];
+    if (!file) return;
+
+    const status = document.getElementById("status");
+    const duplicateMessage = document.getElementById("duplicateMessage");
+    const warningMessage = document.getElementById("warningMessage");
+
+    try {
+        status.textContent = "Reading Excel file...";
+        duplicateMessage.style.display = "none";
+        warningMessage.style.display = "none";
+
+        const buffer = await file.arrayBuffer();
+        const workbook = XLSX.read(buffer, { type: "array", cellDates: false });
+        const firstSheetName = workbook.SheetNames[0];
+
+        if (!firstSheetName) {
+            throw new Error("The Excel file does not contain a worksheet.");
+        }
+
+        const sheet = workbook.Sheets[firstSheetName];
+        const rows = XLSX.utils.sheet_to_json(sheet, {
+            header: 1,
+            defval: "",
+            raw: false,
+            blankrows: false
+        });
+
+        if (!rows.length) {
+            throw new Error("The Excel file is empty.");
+        }
+
+        // Find the header row even if the spreadsheet has a title above it.
+        const headerIndex = rows.findIndex(row => {
+            const headers = row.map(excelHeaderKey);
+            return headers.includes("issue date") && headers.includes("emd number");
+        });
+
+        if (headerIndex < 0) {
+            throw new Error(
+                "Excel columns were not recognized. Please use the format with: Issue Date, Sign In, Connected Ticket, EMD Number, USD Rate, Form of Payment, Weight in KG, Rate per KG (ETB), Amount (ETB), Exchange Rate (USD Rate), Amount in USD."
+            );
+        }
+
+        const headers = rows[headerIndex].map(excelHeaderKey);
+        const col = (names) => {
+            for (const name of names) {
+                const i = headers.indexOf(excelHeaderKey(name));
+                if (i >= 0) return i;
+            }
+            return -1;
+        };
+
+        const columns = {
+            issueDate: col(["Issue Date"]),
+            signIn: col(["Sign In"]),
+            connected: col(["Connected Ticket"]),
+            emd: col(["EMD Number"]),
+            usdRate: col(["USD Rate"]),
+            fop: col(["Form of Payment", "FOP"]),
+            weight: col(["Weight in KG", "Weight KG"]),
+            rateKg: col(["Rate per KG (ETB)", "Rate per KG"]),
+            amountEtb: col(["Amount (ETB)", "Amount ETB"]),
+            exchangeRate: col(["Exchange Rate (USD Rate)", "Exchange Rate"]),
+            amountUsd: col(["Amount in USD", "Amount USD"])
+        };
+
+        const getCell = (row, index) => index >= 0 ? String(row[index] ?? "").trim() : "";
+        const existing = new Set(reportData.map(r => String(r["EMD Number"] || "").trim()).filter(Boolean));
+        const imported = [];
+        const duplicates = [];
+        const invalid = [];
+        const today = new Date().toISOString().slice(0, 10);
+
+        for (let i = headerIndex + 1; i < rows.length; i++) {
+            const row = rows[i];
+            if (!row || row.every(cell => String(cell ?? "").trim() === "")) continue;
+
+            const emdNumber = getCell(row, columns.emd).replace(/\s+/g, "");
+            if (!emdNumber) continue;
+
+            if (existing.has(emdNumber)) {
+                duplicates.push(emdNumber);
+                continue;
+            }
+
+            const issueDate = getCell(row, columns.issueDate).toUpperCase();
+            const signIn = getCell(row, columns.signIn);
+            const connectedTicket = getCell(row, columns.connected).replace(/\s+/g, "");
+            const usdRate = excelNumber(getCell(row, columns.usdRate));
+            const exchangeRate = excelNumber(getCell(row, columns.exchangeRate)) || usdRate;
+            const fop = getCell(row, columns.fop).toUpperCase();
+            const weight = excelNumber(getCell(row, columns.weight));
+            const ratePerKg = excelNumber(getCell(row, columns.rateKg));
+            const amountEtb = excelNumber(getCell(row, columns.amountEtb));
+            const suppliedAmountUsd = excelNumber(getCell(row, columns.amountUsd));
+            const amountUsd = suppliedAmountUsd || (exchangeRate > 0 ? amountEtb / exchangeRate : 0);
+
+            if (!issueDate || !signIn || !usdRate || !amountEtb) {
+                invalid.push(emdNumber);
+                continue;
+            }
+
+            const record = {
+                "No.": reportData.length + imported.length + 1,
+                "EMD Number": emdNumber,
+                "Issue Date": issueDate,
+                "Passenger Name": "",
+                "PNR": "",
+                "Original Currency": "ETB",
+                "Base Value": 0,
+                "Total Value": amountEtb,
+                "FOP": fop,
+                "Original Cash": (fop === "CA" || fop === "CASH") ? amountEtb : 0,
+                "USD Rate": usdRate,
+                "Rate per KG": ratePerKg,
+                "Baggage Qty": weight,
+                "Cash Collected ETB": amountEtb,
+                "Cash Collected USD": amountUsd,
+                "Sign In": signIn,
+                "Connected Ticket": connectedTicket,
+                "Generated Date": today
+            };
+
+            reportData.push(record);
+            imported.push(record);
+            existing.add(emdNumber);
+            processedEMDs.add(emdNumber);
+        }
+
+        if (imported.length) {
+            saveReportsToCloud(imported);
+            displayReport();
+            status.textContent = imported.length + " report row(s) imported from Excel successfully. Total report records: " + reportData.length;
+        } else {
+            status.textContent = "No new Excel report rows were added.";
+        }
+
+        if (duplicates.length) {
+            duplicateMessage.style.display = "block";
+            duplicateMessage.innerHTML = "<strong>⚠ Duplicate EMD(s) skipped:</strong><br><br>" + duplicates.map(escapeHtml).join("<br>");
+        }
+
+        if (invalid.length) {
+            warningMessage.style.display = "block";
+            warningMessage.innerHTML = "<strong>⚠ Rows skipped because required data was missing:</strong><br><br>" + invalid.map(escapeHtml).join("<br>");
+        }
+    } catch (error) {
+        console.error(error);
+        status.textContent = "Excel import failed.";
+        alert(error.message || "Could not read the Excel file.");
+    } finally {
+        // Allow the same file to be selected again later.
+        event.target.value = "";
+    }
 }
 
 /*
