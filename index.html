@@ -500,7 +500,7 @@ body.dark-mode .dark-mode-btn:hover{background:#243b52}
     <table>
       <thead><tr>
         <th>Issue Date</th><th>User ID</th><th>Sign In</th><th>Connected Ticket</th><th>EMD Number</th>
-        <th>USD Rate</th><th>FOP</th><th>Weight KG</th><th>Rate/KG</th><th>Amount ETB</th><th>Amount USD</th>
+        <th>FOP</th><th>Weight KG</th><th>Rate/KG</th><th>Amount ETB</th><th>USD Exchange Rate</th><th>Amount USD</th>
       </tr></thead>
       <tbody id="supervisorBody"></tbody>
     </table>
@@ -651,7 +651,7 @@ ISSUED IN CONNECTION WITH - 0712163315291
                 <tr>
                   <th>Issue Date</th><th>Sign In</th><th>Connected Ticket</th><th>EMD Number</th>
                   <th>Form of Payment</th><th>Weight in KG</th><th>Rate per KG (ETB)</th>
-                  <th>Amount (ETB)</th><th>USD Rate</th><th>Amount in USD</th>
+                  <th>Amount (ETB)</th><th>USD Exchange Rate</th><th>Amount in USD</th>
                 </tr>
               </thead>
               <tbody id="historyDetailBody"></tbody>
@@ -677,7 +677,7 @@ ISSUED IN CONNECTION WITH - 0712163315291
                 <th>Weight in KG</th>
                 <th>Rate per KG (ETB)</th>
                 <th>Amount (ETB)</th>
-                <th>USD Rate</th>
+                <th>Exchange Rate (USD Rate)</th>
                 <th>Amount in USD</th>
               </tr>
             </thead>
@@ -1134,7 +1134,7 @@ function renderSupervisorReports() {
       <div class="metric"><div class="label">Users</div><div class="value">${users.size}</div></div>
       <div class="metric"><div class="label">Report Records</div><div class="value">${filtered.length}</div></div>
       <div class="metric primary"><div class="label">Collected ETB</div><div class="value">ETB ${formatNumber(totalETB)}</div></div>
-      <div class="metric success"><div class="label">Collected USD</div><div class="value">USD ${formatNumber(totalUSD)}</div></div>`;
+      <div class="metric success"><div class="label">Collected USD</div><div class="value">USD ${formatUSD(totalUSD)}</div></div>`;
 
     if(!filtered.length){
         body.innerHTML='<tr><td colspan="11" style="text-align:center;padding:28px;color:#8094a8">No user reports found.</td></tr>';
@@ -1149,12 +1149,12 @@ function renderSupervisorReports() {
           <td>${escapeHtml(r["Sign In"]||"")}</td>
           <td>${escapeHtml(r["Connected Ticket"]||"")}</td>
           <td>${escapeHtml(r["EMD Number"]||"")}</td>
-          <td>${formatNumber(r["USD Rate"])}</td>
           <td>${escapeHtml(r["FOP"]||"")}</td>
           <td>${formatNumber(r["Baggage Qty"])}</td>
           <td>${formatNumber(r["Rate per KG"])}</td>
           <td>${formatNumber(r["Cash Collected ETB"])}</td>
-          <td>${formatNumber(r["Cash Collected USD"])}</td>
+          <td>${formatNumber(r["USD Rate"])}</td>
+          <td>${formatUSD(r["Cash Collected USD"])}</td>
         </tr>`;
     }).join("");
 }
@@ -1170,14 +1170,14 @@ function downloadSupervisorExcel(){
             const matchesMonth=!supervisorSelectedMonth || (issueMonth && issueMonth.year===supervisorSelectedMonth.year && issueMonth.month===supervisorSelectedMonth.month);
             return (!search || hay.some(v=>v.includes(search))) && (!date || String(r["Issue Date"]??"").toLowerCase().includes(date)) && matchesMonth;
         });
-        const headers=["User ID","Issue Date","Sign In","Connected Ticket","EMD Number","USD Rate","Form of Payment","Weight in KG","Rate per KG (ETB)","Amount (ETB)","Amount in USD"];
+        const headers=["User ID","Issue Date","Sign In","Connected Ticket","EMD Number","Form of Payment","Weight in KG","Rate per KG (ETB)","Amount (ETB)","USD Exchange Rate","Amount in USD"];
         const rows=filtered.map(item=>{
             const r=item.report_data || {};
             return [
                 item.profiles?.user_code||"", r["Issue Date"]||"", r["Sign In"]||"",
-                r["Connected Ticket"]||"", r["EMD Number"]||"", r["USD Rate"]||"",
-                r["FOP"]||"", r["Baggage Qty"]||"", r["Rate per KG"]||"",
-                r["Cash Collected ETB"]||"", r["Cash Collected USD"]||""
+                r["Connected Ticket"]||"", r["EMD Number"]||"", r["FOP"]||"",
+                r["Baggage Qty"]||"", r["Rate per KG"]||"",
+                r["Cash Collected ETB"]||"", r["USD Rate"]||"", r["Cash Collected USD"]||""
             ];
         });
         downloadExcelFallback(headers, rows, "Excess_Baggage_Collection_Supervisor_Report.xls");
@@ -1200,12 +1200,12 @@ function downloadSupervisorExcel(){
           "Sign In":r["Sign In"]||"",
           "Connected Ticket":r["Connected Ticket"]||"",
           "EMD Number":r["EMD Number"]||"",
-          "USD Rate":r["USD Rate"]||"",
           "Form of Payment":r["FOP"]||"",
           "Weight in KG":r["Baggage Qty"]||"",
           "Rate per KG (ETB)":r["Rate per KG"]||"",
           "Amount (ETB)":r["Cash Collected ETB"]||"",
-          "Amount in USD":r["Cash Collected USD"]||""
+          "USD Exchange Rate":r["USD Rate"]||"",
+          "Amount in USD":roundUSD(r["Cash Collected USD"])
         };
     });
     try {
@@ -1215,8 +1215,8 @@ function downloadSupervisorExcel(){
         XLSX.writeFile(wb,"Excess_Baggage_Collection_Supervisor_Report.xlsx");
     } catch (error) {
         console.error(error);
-        const headers=["User ID","Issue Date","Sign In","Connected Ticket","EMD Number","USD Rate","Form of Payment","Weight in KG","Rate per KG (ETB)","Amount (ETB)","Amount in USD"];
-        const fallbackRows=filtered.map(item=>{ const r=item.report_data||{}; return [item.profiles?.user_code||"",r["Issue Date"]||"",r["Sign In"]||"",r["Connected Ticket"]||"",r["EMD Number"]||"",r["FOP"]||"",r["Baggage Qty"]||"",r["Rate per KG"]||"",r["Cash Collected ETB"]||"",r["USD Rate"]||"",r["Cash Collected USD"]||""]; });
+        const headers=["User ID","Issue Date","Sign In","Connected Ticket","EMD Number","Form of Payment","Weight in KG","Rate per KG (ETB)","Amount (ETB)","USD Exchange Rate","Amount in USD"];
+        const fallbackRows=filtered.map(item=>{ const r=item.report_data||{}; return [item.profiles?.user_code||"",r["Issue Date"]||"",r["Sign In"]||"",r["Connected Ticket"]||"",r["EMD Number"]||"",r["FOP"]||"",r["Baggage Qty"]||"",r["Rate per KG"]||"",r["Cash Collected ETB"]||"",r["USD Rate"]||"",roundUSD(r["Cash Collected USD"])]; });
         downloadExcelFallback(headers,fallbackRows,"Excess_Baggage_Collection_Supervisor_Report.xls");
     }
 }
@@ -1597,7 +1597,7 @@ function generateReport() {
 
         cashCollectedUSD =
             usdRate > 0
-                ? cashCollectedETB / usdRate
+                ? roundUSD(cashCollectedETB / usdRate)
                 : 0;
 
         /*
@@ -1909,7 +1909,7 @@ function retrieveDailyReport(day) {
         <td>${formatNumber(item["Rate per KG"])}</td>
         <td>${formatNumber(item["Cash Collected ETB"])}</td>
         <td>${formatNumber(item["USD Rate"])}</td>
-        <td>USD ${formatNumber(item["Cash Collected USD"])}</td>
+        <td>USD ${formatUSD(item["Cash Collected USD"])}</td>
       </tr>`).join("");
     detail.classList.add("open");
     detail.scrollIntoView({behavior:"smooth", block:"start"});
@@ -1974,7 +1974,7 @@ function displayReport() {
             </td>
 
             <td class="usd">
-                USD ${formatNumber(item["Cash Collected USD"])}
+                USD ${formatUSD(item["Cash Collected USD"])}
             </td>
 
         `;
@@ -2067,6 +2067,15 @@ NUMBER FORMAT
 =========================================================
 */
 
+function roundUSD(value) {
+    const number = parseFloat(value) || 0;
+    return Math.round((number + Number.EPSILON) * 10) / 10;
+}
+
+function formatUSD(value) {
+    return roundUSD(value).toLocaleString("en-US", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+}
+
 function formatNumber(value) {
 
     const number =
@@ -2116,9 +2125,16 @@ function downloadExcelFallback(headers, rows, filename) {
     const esc = (v) => String(v ?? "")
         .replace(/&/g, "&amp;").replace(/</g, "&lt;")
         .replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+    // Force ticket/EMD columns to TEXT in the fallback Excel-readable HTML
+    // so Excel does not turn long identifiers into scientific notation.
     const htmlRows = [
         "<table border='1'><tr>" + headers.map(h => "<th>" + esc(h) + "</th>").join("") + "</tr>",
-        ...rows.map(row => "<tr>" + row.map(v => "<td>" + esc(v) + "</td>").join("") + "</tr>"),
+        ...rows.map(row => "<tr>" + row.map((v, i) => {
+            const isIdentifier = i === 2 || i === 3;
+            return isIdentifier
+                ? "<td style=\"mso-number-format:\'@\';\">" + esc(v) + "</td>"
+                : "<td>" + esc(v) + "</td>";
+        }).join("") + "</tr>"),
         "</table>"
     ].join("");
     const content = "<html><head><meta charset='UTF-8'></head><body>" + htmlRows + "</body></html>";
@@ -2145,15 +2161,14 @@ function downloadExcel() {
     // still provide a real Excel-readable .xls download instead of failing.
     if (typeof XLSX === "undefined") {
         const headers = [
-            "Issue Date","Sign In","Connected Ticket","EMD Number",
-            "Form of Payment","Weight in KG","Rate per KG (ETB)","Amount (ETB)",
-            "USD Rate","Amount in USD"
+            "Issue Date","Sign In","Connected Ticket","EMD Number","Form of Payment",
+            "Weight in KG","Rate per KG (ETB)","Amount (ETB)","USD Exchange Rate","Amount in USD"
         ];
         const rows = reportData.map(item => [
             item["Issue Date"], item["Sign In"], item["Connected Ticket"],
-            item["EMD Number"], item["FOP"], item["Baggage Qty"],
-            item["Rate per KG"], item["Cash Collected ETB"], item["USD Rate"],
-            item["Cash Collected USD"]
+            item["EMD Number"], item["FOP"],
+            item["Baggage Qty"], item["Rate per KG"], item["Cash Collected ETB"],
+            item["USD Rate"], item["Cash Collected USD"]
         ]);
         downloadExcelFallback(headers, rows, "Excess_Baggage_Collection_Report.xls");
         return;
@@ -2184,12 +2199,29 @@ function downloadExcel() {
         "Weight in KG": item["Baggage Qty"],
         "Rate per KG (ETB)": item["Rate per KG"],
         "Amount (ETB)": item["Cash Collected ETB"],
-        "USD Rate": item["USD Rate"],
-        "Amount in USD": item["Cash Collected USD"]
+        "USD Exchange Rate": item["USD Rate"],
+        "Amount in USD": roundUSD(item["Cash Collected USD"])
     }));
 
     const worksheet =
         XLSX.utils.json_to_sheet(exportData);
+
+    // Ticket and EMD numbers are identifiers, NOT numbers.
+    // Force Excel cells to TEXT so long 13-digit values are shown exactly
+    // as stored (including the leading 0) instead of 7.12E+11.
+    reportData.forEach((item, rowIndex) => {
+        const excelRow = rowIndex + 2;
+        ["C", "D"].forEach(column => {
+            const cell = worksheet[column + excelRow];
+            const key = column === "C" ? "Connected Ticket" : "EMD Number";
+            const value = String(item[key] ?? "");
+            if (cell) {
+                cell.t = "s";
+                cell.v = value;
+                cell.z = "@";
+            }
+        });
+    });
 
     const workbook =
         XLSX.utils.book_new();
@@ -2213,7 +2245,7 @@ function downloadExcel() {
         { wch: 14 }, // Weight in KG
         { wch: 20 }, // Rate per KG (ETB)
         { wch: 16 }, // Amount (ETB)
-        { wch: 12 }, // USD Rate
+        { wch: 20 }, // USD Exchange Rate
         { wch: 16 }  // Amount in USD
     ];
 
@@ -2229,7 +2261,7 @@ function downloadExcel() {
             "F", // Weight in KG
             "G", // Rate per KG (ETB)
             "H", // Amount (ETB)
-            "I", // USD Rate
+            "I", // USD Exchange Rate
             "J"  // Amount in USD
         ];
 
@@ -2247,6 +2279,13 @@ function downloadExcel() {
             }
 
         });
+
+        const usdCell = worksheet["J" + excelRow];
+        if (usdCell) {
+            usdCell.t = "n";
+            usdCell.v = roundUSD(item["Cash Collected USD"]);
+            usdCell.z = '#,##0.0';
+        }
 
     });
 
@@ -2610,8 +2649,8 @@ IMPORT EXCEL / SPREADSHEET REPORT
 =========================================================
 
 Supported columns (the user's 3rd format):
-Issue Date | Sign In | Connected Ticket | EMD Number | USD Rate |
-Form of Payment | Weight in KG | Rate per KG (ETB) | Amount (ETB) | Amount in USD
+Issue Date | Sign In | Connected Ticket | EMD Number | Form of Payment |
+Weight in KG | Rate per KG (ETB) | Amount (ETB) | USD Exchange Rate | Amount in USD
 
 Extra columns are ignored.
 */
@@ -2628,6 +2667,33 @@ function excelNumber(value) {
     const cleaned = String(value).replace(/,/g, "").replace(/\s+/g, "").trim();
     const n = parseFloat(cleaned);
     return Number.isFinite(n) ? n : 0;
+}
+
+// Excel/SheetJS may expose a long ticket/EMD identifier as either a Number
+// or scientific notation (for example 7.12164E+11). Convert it back to the
+// full identifier before saving it, and restore the Ethiopian 071 prefix when
+// Excel has already dropped the leading zero.
+function excelIdentifier(value) {
+    if (value === null || value === undefined || value === "") return "";
+
+    const raw = String(value).trim().replace(/\s+/g, "");
+    if (!raw) return "";
+
+    // Already a normal identifier: keep it exactly as text.
+    if (/^071\d{10}$/.test(raw)) return raw;
+
+    // Recover full digits from scientific notation or a numeric cell.
+    if (/^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:e[+-]?\d+)?$/i.test(raw)) {
+        const n = Number(raw);
+        if (Number.isFinite(n) && Math.abs(n) < Number.MAX_SAFE_INTEGER) {
+            let digits = Math.trunc(n).toString();
+            // EMD/ticket identifiers in this report use the 071XXXXXXXXXX format.
+            if (/^7\d{11}$/.test(digits)) digits = "0" + digits;
+            return digits;
+        }
+    }
+
+    return raw;
 }
 
 async function importExcelReport(event) {
@@ -2671,7 +2737,7 @@ async function importExcelReport(event) {
 
         if (headerIndex < 0) {
             throw new Error(
-                "Excel columns were not recognized. Please use the format with: Issue Date, Sign In, Connected Ticket, EMD Number, USD Rate, Form of Payment, Weight in KG, Rate per KG (ETB), Amount (ETB), Amount in USD."
+                "Excel columns were not recognized. Please use the format with: Issue Date, Sign In, Connected Ticket, EMD Number, Form of Payment, Weight in KG, Rate per KG (ETB), Amount (ETB), USD Exchange Rate, Amount in USD."
             );
         }
 
@@ -2689,20 +2755,14 @@ async function importExcelReport(event) {
             signIn: col(["Sign In"]),
             connected: col(["Connected Ticket"]),
             emd: col(["EMD Number"]),
-            usdRate: col(["USD Rate"]),
+            usdRate: col(["USD Exchange Rate", "USD Rate"]),
             fop: col(["Form of Payment", "FOP"]),
             weight: col(["Weight in KG", "Weight KG"]),
             rateKg: col(["Rate per KG (ETB)", "Rate per KG"]),
             amountEtb: col(["Amount (ETB)", "Amount ETB"]),
-            exchangeRate: col(["Exchange Rate (USD Rate)", "Exchange Rate"]),
+            exchangeRate: col(["USD Exchange Rate", "Exchange Rate (USD Rate)", "Exchange Rate"]),
             amountUsd: col(["Amount in USD", "Amount USD"])
         };
-
-        // USD Rate is the single exchange-rate field used by the report.
-        // Older imported files may still contain the old duplicate exchange-rate column.
-        if (columns.usdRate < 0 && columns.exchangeRate >= 0) {
-            columns.usdRate = columns.exchangeRate;
-        }
 
         const getCell = (row, index) => index >= 0 ? String(row[index] ?? "").trim() : "";
         const existing = new Set(reportData.map(r => String(r["EMD Number"] || "").trim()).filter(Boolean));
@@ -2715,7 +2775,7 @@ async function importExcelReport(event) {
             const row = rows[i];
             if (!row || row.every(cell => String(cell ?? "").trim() === "")) continue;
 
-            const emdNumber = getCell(row, columns.emd).replace(/\s+/g, "");
+            const emdNumber = excelIdentifier(getCell(row, columns.emd));
             if (!emdNumber) continue;
 
             if (existing.has(emdNumber)) {
@@ -2725,15 +2785,16 @@ async function importExcelReport(event) {
 
             const issueDate = getCell(row, columns.issueDate).toUpperCase();
             const signIn = getCell(row, columns.signIn);
-            const connectedTicket = getCell(row, columns.connected).replace(/\s+/g, "");
-            const usdRate = excelNumber(getCell(row, columns.usdRate));
-            const exchangeRate = excelNumber(getCell(row, columns.exchangeRate)) || usdRate;
+            const connectedTicket = excelIdentifier(getCell(row, columns.connected));
+            const suppliedUsdRate = excelNumber(getCell(row, columns.usdRate));
+            const exchangeRate = excelNumber(getCell(row, columns.exchangeRate)) || suppliedUsdRate;
+            const usdRate = exchangeRate || suppliedUsdRate;
             const fop = getCell(row, columns.fop).toUpperCase();
             const weight = excelNumber(getCell(row, columns.weight));
             const ratePerKg = excelNumber(getCell(row, columns.rateKg));
             const amountEtb = excelNumber(getCell(row, columns.amountEtb));
             const suppliedAmountUsd = excelNumber(getCell(row, columns.amountUsd));
-            const amountUsd = suppliedAmountUsd || (exchangeRate > 0 ? amountEtb / exchangeRate : 0);
+            const amountUsd = roundUSD(suppliedAmountUsd || (exchangeRate > 0 ? amountEtb / exchangeRate : 0));
 
             if (!issueDate || !signIn || !usdRate || !amountEtb) {
                 invalid.push(emdNumber);
